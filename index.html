@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stopwatch with Speech Transcription</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+
+        #stopwatch {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        #transcription {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 20px;
+            width: 80%;
+            margin: 0 auto;
+            height: 200px;
+            overflow-y: scroll;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Stopwatch with Real-time Speech Transcription</h1>
+    
+    <div id="stopwatch">00:00:00</div>
+    <button id="startStopBtn">Start</button>
+    
+    <div id="transcription">
+        <h3>Transcription:</h3>
+        <p id="textOutput">Your transcription will appear here...</p>
+    </div>
+
+    <script>
+        // Stopwatch Variables
+        let startTime, interval, isRunning = false;
+
+        // Speech Recognition Setup
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        // Elements
+        const stopwatchEl = document.getElementById('stopwatch');
+        const startStopBtn = document.getElementById('startStopBtn');
+        const textOutput = document.getElementById('textOutput');
+
+        // Start/Stop Button Click
+        startStopBtn.addEventListener('click', function () {
+            if (!isRunning) {
+                startStopwatch();
+                startTranscription();
+                startStopBtn.textContent = "Stop";
+            } else {
+                stopStopwatch();
+                stopTranscription();
+                startStopBtn.textContent = "Start";
+            }
+            isRunning = !isRunning;
+        });
+
+        // Stopwatch Functionality
+        function startStopwatch() {
+            startTime = Date.now();
+            interval = setInterval(updateStopwatch, 1000);
+        }
+
+        function updateStopwatch() {
+            const elapsedTime = Date.now() - startTime;
+            const hours = Math.floor((elapsedTime / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
+            const seconds = Math.floor((elapsedTime / 1000) % 60);
+
+            stopwatchEl.textContent = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+        }
+
+        function pad(number) {
+            return number < 10 ? `0${number}` : number;
+        }
+
+        function stopStopwatch() {
+            clearInterval(interval);
+        }
+
+        // Speech Transcription
+        function startTranscription() {
+            recognition.start();
+
+            recognition.onresult = function (event) {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                textOutput.textContent = transcript;
+            };
+
+            recognition.onerror = function (event) {
+                console.log('Speech recognition error detected: ' + event.error);
+            };
+        }
+
+        function stopTranscription() {
+            recognition.stop();
+        }
+    </script>
+
+</body>
+</html>
